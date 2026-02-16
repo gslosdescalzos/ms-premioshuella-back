@@ -1,9 +1,17 @@
-from app.models.user import User
-from app.models.admin import Admin
 from app.models.category import Category
-from app.models.participation import Participation
+from app.models.colabora import Colabora
+from app.models.contact import Contact
 from app.models.initial_vote import InitialVote
-from app.models.artist import Artist
-from app.models.stand import Stand
+from app.models.newsletter import Newsletter
+from app.models.participation import Participation
+from app.models.profile import Profile
 
-__all__ = ["User", "Admin", "Category", "Participation", "InitialVote", "Artist", "Stand"]
+__all__ = [
+    "Category",
+    "Colabora",
+    "Contact",
+    "InitialVote",
+    "Newsletter",
+    "Participation",
+    "Profile",
+]

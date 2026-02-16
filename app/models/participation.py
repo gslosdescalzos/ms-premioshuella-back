@@ -8,16 +8,23 @@ from app.database import Base
 
 class Participation(Base):
     __tablename__ = "participation"
-    __table_args__ = (UniqueConstraint("user_id", "category_id", name="uq_participation_user_category"),)
+    __table_args__ = (
+        UniqueConstraint("profile_id", "category_id", name="uq_participation_profile_category"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
+    profile_id: Mapped[str] = mapped_column(String(36), ForeignKey("profile.id"), nullable=False)
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey("category.id"), nullable=False)
-    content_url: Mapped[str] = mapped_column(String(500), nullable=True)
-    comments: Mapped[str] = mapped_column(Text, nullable=True)
+    content_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    comments: Mapped[str | None] = mapped_column(Text, nullable=True)
+    is_scout: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=None)
+    scout_group: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    participant_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    participant_surname: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_finalist: Mapped[bool] = mapped_column(Boolean, default=False)
     submitted_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
-    user: Mapped["User"] = relationship("User", back_populates="participations")
+    profile: Mapped["Profile"] = relationship("Profile", back_populates="participations")
     category: Mapped["Category"] = relationship("Category", back_populates="participations")
     votes: Mapped[list["InitialVote"]] = relationship("InitialVote", back_populates="participation")

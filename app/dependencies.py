@@ -1,8 +1,8 @@
 from typing import Generator
 
+import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -25,9 +25,12 @@ def get_current_user(
     token = credentials.credentials
     try:
         payload = jwt.decode(
-            token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM]
+            token,
+            settings.SUPABASE_JWT_SECRET,
+            algorithms=["HS256"],
+            audience="authenticated",
         )
-    except JWTError:
+    except jwt.InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
@@ -38,13 +41,14 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
         )
-    return payload
+    return {"user_id": user_id, "email": payload.get("email")}
 
 
 def get_current_admin_user(
     payload: dict = Depends(get_current_user),
 ) -> dict:
-    if not payload.get("is_admin", False):
+    app_metadata = payload.get("app_metadata", {})
+    if not app_metadata.get("is_admin", False):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin privileges required",

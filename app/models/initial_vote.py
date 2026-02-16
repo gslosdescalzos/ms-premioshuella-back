@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, ForeignKey, Integer, UniqueConstraint
+from sqlalchemy import DateTime, ForeignKey, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -8,14 +8,18 @@ from app.database import Base
 
 class InitialVote(Base):
     __tablename__ = "initial_vote"
-    __table_args__ = (UniqueConstraint("user_id", "category_id", name="uq_initial_vote_user_category"),)
+    __table_args__ = (
+        UniqueConstraint("profile_id", "category_id", name="uq_initial_vote_profile_category"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("user.id"), nullable=False)
-    participation_id: Mapped[int] = mapped_column(Integer, ForeignKey("participation.id"), nullable=False)
+    profile_id: Mapped[str] = mapped_column(String(36), ForeignKey("profile.id"), nullable=False)
+    participation_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("participation.id"), nullable=False
+    )
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey("category.id"), nullable=False)
     creation_date: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
-    user: Mapped["User"] = relationship("User", back_populates="votes")
+    profile: Mapped["Profile"] = relationship("Profile", back_populates="votes")
     participation: Mapped["Participation"] = relationship("Participation", back_populates="votes")
     category: Mapped["Category"] = relationship("Category", back_populates="votes")

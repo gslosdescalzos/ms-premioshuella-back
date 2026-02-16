@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_current_admin_user, get_current_user, get_db
-from app.schemas.vote import VoteCountResponse, VoteCreate, VoteResponse
+from app.exceptions import ConflictError, NotFoundError
+from app.schemas.vote import VoteCountResponse, VoteResponse
 from app.services.vote import create_vote, get_votes_by_category
 
 router = APIRouter(tags=["Votes"])
@@ -17,11 +18,15 @@ router = APIRouter(tags=["Votes"])
 def vote(
     category_id: int,
     participant_id: int,
-    body: VoteCreate,
     db: Session = Depends(get_db),
-    _current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
 ):
-    return create_vote(db, body.user_id, category_id, participant_id)
+    try:
+        return create_vote(db, current_user["user_id"], category_id, participant_id)
+    except NotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
+    except ConflictError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=e.message)
 
 
 @router.get(
