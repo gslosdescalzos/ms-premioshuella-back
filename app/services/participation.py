@@ -1,11 +1,9 @@
-from fastapi import UploadFile
 from sqlalchemy.orm import Session
 
 from app.exceptions import ConflictError, NotFoundError
 from app.models.category import Category
 from app.models.participation import Participation
 from app.models.profile import Profile
-from app.services.storage import upload_files
 
 
 def _get_or_create_profile(db: Session, user_id: str) -> Profile:
@@ -22,8 +20,8 @@ def create_participation(
     user_id: str,
     category_id: int,
     comments: str | None,
-    files: list[UploadFile],
     *,
+    content_url: str | None = None,
     is_scout: bool,
     scout_group: str | None = None,
     phone: str,
@@ -49,10 +47,6 @@ def create_participation(
     )
     if existing is not None:
         raise ConflictError("User already has a participation in this category")
-
-    content_url = None
-    if files:
-        content_url = upload_files(files, category.name, user_id)
 
     participation = Participation(
         profile_id=user_id,

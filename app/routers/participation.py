@@ -1,16 +1,49 @@
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, Form, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.dependencies import get_current_admin_user, get_current_user, get_db
 from app.exceptions import ConflictError, NotFoundError
-from app.schemas.participation import ParticipationResponse
+from app.models.category import Category
+from app.schemas.participation import (
+    ParticipationResponse,
+    PresignUploadRequest,
+    PresignUploadResponse,
+)
 from app.services.participation import (
     create_participation,
     get_all_participants,
     get_participants_by_category,
 )
+from app.services.storage import generate_presigned_upload
 
 router = APIRouter(tags=["Participations"])
+
+
+@router.post(
+    "/category/{category_id}/presign-upload",
+    response_model=PresignUploadResponse,
+    summary="Generate presigned URLs for S3 upload",
+    status_code=status.HTTP_200_OK,
+)
+def presign_upload(
+    category_id: int,
+    body: PresignUploadRequest,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if category is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
+        )
+
+    uploads = generate_presigned_upload(
+        filenames=[f.filename for f in body.files],
+        content_types=[f.content_type for f in body.files],
+        category_name=category.name,
+        user_id=current_user["user_id"],
+    )
+    return PresignUploadResponse(uploads=uploads)
 
 
 @router.post(
@@ -27,7 +60,7 @@ def participate(
     phone: str = Form(...),
     participant_name: str | None = Form(None),
     participant_surname: str | None = Form(None),
-    files: list[UploadFile] = File(default=[]),
+    content_url: str | None = Form(None),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
@@ -37,7 +70,7 @@ def participate(
             current_user["user_id"],
             category_id,
             comments,
-            files,
+            content_url=content_url,
             is_scout=is_scout,
             scout_group=scout_group,
             phone=phone,
