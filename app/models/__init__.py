@@ -4,6 +4,7 @@ from app.models.contact import Contact
 from app.models.initial_vote import InitialVote
 from app.models.newsletter import Newsletter
 from app.models.participation import Participation
+from app.models.participation_file import ParticipationFile
 from app.models.profile import Profile
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     "InitialVote",
     "Newsletter",
     "Participation",
+    "ParticipationFile",
     "Profile",
 ]

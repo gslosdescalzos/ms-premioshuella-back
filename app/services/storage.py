@@ -1,12 +1,15 @@
 import re
 
 import boto3
+from botocore.config import Config
 
 from app.config import settings
 
 _s3 = boto3.client(
     "s3",
     region_name=settings.AWS_REGION,
+    endpoint_url=f"https://s3.{settings.AWS_REGION}.amazonaws.com",
+    config=Config(s3={"addressing_style": "virtual"}),
     aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
     aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
 )
@@ -45,7 +48,6 @@ def generate_presigned_upload(
             {
                 "filename": filename,
                 "presigned_url": presigned_url,
-                "public_url": get_public_url(key),
                 "key": key,
             }
         )
@@ -53,5 +55,15 @@ def generate_presigned_upload(
     return results
 
 
-def get_public_url(key: str) -> str:
-    return f"https://{settings.AWS_S3_BUCKET}.s3.{settings.AWS_REGION}.amazonaws.com/{key}"
+def generate_presigned_download(key: str) -> str:
+    return _s3.generate_presigned_url(
+        "get_object",
+        Params={"Bucket": settings.AWS_S3_BUCKET, "Key": key},
+        ExpiresIn=PRESIGNED_URL_EXPIRY,
+    )
+
+
+def extract_storage_key(value: str) -> str:
+    if "amazonaws.com/" in value:
+        return value.split("amazonaws.com/", 1)[-1]
+    return value

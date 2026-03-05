@@ -15,8 +15,8 @@ alembic = "^1.14"
 pydantic = {extras = ["email"], version = "^2.10"}
 pydantic-settings = "^2.7"
 boto3 = "^1.35"
-PyJWT = {extras = ["crypto"], version = "^2.10"}
 python-multipart = "^0.0.20"
+httpx = "^0.28"
 
 [build-system]
 requires = ["poetry-core"]

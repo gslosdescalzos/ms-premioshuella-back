@@ -15,7 +15,6 @@ class PresignUploadRequest(BaseModel):
 class PresignedFileInfo(BaseModel):
     filename: str
     presigned_url: str
-    public_url: str
     key: str
 
 
@@ -23,11 +22,17 @@ class PresignUploadResponse(BaseModel):
     uploads: list[PresignedFileInfo]
 
 
+class ParticipationFileResponse(BaseModel):
+    id: int
+    content_url: str
+
+    model_config = {"from_attributes": True}
+
+
 class ParticipationResponse(BaseModel):
     id: int
     profile_id: str
     category_id: int
-    content_url: str | None = None
     comments: str | None = None
     is_scout: bool | None = None
     scout_group: str | None = None
@@ -36,5 +41,6 @@ class ParticipationResponse(BaseModel):
     participant_surname: str | None = None
     is_finalist: bool
     submitted_at: datetime
+    files: list[ParticipationFileResponse] = []
 
     model_config = {"from_attributes": True}

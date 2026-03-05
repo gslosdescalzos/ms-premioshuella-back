@@ -15,7 +15,6 @@ class Participation(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     profile_id: Mapped[str] = mapped_column(String(36), ForeignKey("profile.id"), nullable=False)
     category_id: Mapped[int] = mapped_column(Integer, ForeignKey("category.id"), nullable=False)
-    content_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     comments: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_scout: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=None)
     scout_group: Mapped[str | None] = mapped_column(String(255), nullable=True)
@@ -28,3 +27,4 @@ class Participation(Base):
     profile: Mapped["Profile"] = relationship("Profile", back_populates="participations")
     category: Mapped["Category"] = relationship("Category", back_populates="participations")
     votes: Mapped[list["InitialVote"]] = relationship("InitialVote", back_populates="participation")
+    files: Mapped[list["ParticipationFile"]] = relationship("ParticipationFile", back_populates="participation")

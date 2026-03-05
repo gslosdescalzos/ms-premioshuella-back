@@ -1,3 +1,5 @@
+import json
+
 from fastapi import APIRouter, Depends, Form, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -13,6 +15,7 @@ from app.services.participation import (
     create_participation,
     get_all_participants,
     get_participants_by_category,
+    to_participation_response,
 )
 from app.services.storage import generate_presigned_upload
 
@@ -60,23 +63,34 @@ def participate(
     phone: str = Form(...),
     participant_name: str | None = Form(None),
     participant_surname: str | None = Form(None),
-    content_url: str | None = Form(None),
+    content_urls: str | None = Form(None),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
+    content_urls_list: list[str] = []
+    if content_urls:
+        try:
+            content_urls_list = json.loads(content_urls)
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="content_urls must be a valid JSON array",
+            )
+
     try:
-        return create_participation(
+        participation = create_participation(
             db,
             current_user["user_id"],
             category_id,
             comments,
-            content_url=content_url,
+            content_urls=content_urls_list or None,
             is_scout=is_scout,
             scout_group=scout_group,
             phone=phone,
             participant_name=participant_name,
             participant_surname=participant_surname,
         )
+        return to_participation_response(participation)
     except NotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
     except ConflictError as e:
@@ -95,7 +109,8 @@ def list_participants_by_category(
     _admin: dict = Depends(get_current_admin_user),
 ):
     try:
-        return get_participants_by_category(db, category_id)
+        participations = get_participants_by_category(db, category_id)
+        return [to_participation_response(p) for p in participations]
     except NotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
 
@@ -110,4 +125,5 @@ def list_all_participants(
     db: Session = Depends(get_db),
     _admin: dict = Depends(get_current_admin_user),
 ):
-    return get_all_participants(db)
+    participations = get_all_participants(db)
+    return [to_participation_response(p) for p in participations]
