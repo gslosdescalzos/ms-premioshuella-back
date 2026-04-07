@@ -16,6 +16,9 @@ class Profile(Base):
     participations: Mapped[list["Participation"]] = relationship(
         "Participation", back_populates="profile"
     )
+    preinscriptions: Mapped[list["Preinscription"]] = relationship(
+        "Preinscription", back_populates="profile"
+    )
     votes: Mapped[list["InitialVote"]] = relationship(
         "InitialVote", back_populates="profile"
     )

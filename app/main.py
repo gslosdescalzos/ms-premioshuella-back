@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import category, colabora, contact, newsletter, participation, vote
+from app.routers import category, colabora, contact, newsletter, participation, preinscription, vote
 
 app = FastAPI(
     title="Premios Huella API",
@@ -11,6 +11,7 @@ app = FastAPI(
     openapi_tags=[
         {"name": "Categories", "description": "Category management"},
         {"name": "Participations", "description": "Participation and participant management"},
+        {"name": "Preinscriptions", "description": "Contest preinscriptions"},
         {"name": "Votes", "description": "Voting management"},
         {"name": "Newsletter", "description": "Newsletter subscription"},
         {"name": "Contact", "description": "Contact form"},
@@ -28,6 +29,7 @@ app.add_middleware(
 
 app.include_router(category.router, prefix=settings.API_V1_PREFIX)
 app.include_router(participation.router, prefix=settings.API_V1_PREFIX)
+app.include_router(preinscription.router, prefix=settings.API_V1_PREFIX)
 app.include_router(vote.router, prefix=settings.API_V1_PREFIX)
 app.include_router(newsletter.router, prefix=settings.API_V1_PREFIX)
 app.include_router(contact.router, prefix=settings.API_V1_PREFIX)
